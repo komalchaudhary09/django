@@ -1,0 +1,23 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Page Not Found (404){% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-6 text-center">
+        <div class="display-1 text-primary fw-bold mb-2">404</div>
+        <h2 class="fw-bold mb-3">Page Not Found</h2>
+        <p class="text-muted mb-4">
+            The page you requested <code>{{ requested_path }}</code> could not be found or may have been moved.
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="bi bi-house-door me-1"></i> Back to Home
+            </a>
+            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-people me-1"></i> Student Directory
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

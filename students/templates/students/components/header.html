@@ -1,0 +1,55 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <i class="bi bi-mortarboard-fill text-warning fs-4"></i>
+            <span>Django Academy</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active fw-semibold{% endif %}" href="{% url 'home' %}">
+                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'student' in request.resolver_match.url_name %}active fw-semibold{% endif %}" href="{% url 'student_list' %}">
+                        <i class="bi bi-people-fill me-1"></i> Students
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'course' in request.resolver_match.url_name %}active fw-semibold{% endif %}" href="{% url 'course_list' %}">
+                        <i class="bi bi-book-half me-1"></i> Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active fw-semibold{% endif %}" href="{% url 'about' %}">
+                        <i class="bi bi-info-circle me-1"></i> About
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active fw-semibold{% endif %}" href="{% url 'contact' %}">
+                        <i class="bi bi-envelope me-1"></i> Contact
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'student_create' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>Add Student</span>
+                </a>
+                <a href="{% url 'course_create' %}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Course</span>
+                </a>
+                <a href="/admin/" target="_blank" class="btn btn-warning btn-sm d-flex align-items-center gap-1" title="Django Admin Panel">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>Admin</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

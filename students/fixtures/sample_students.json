@@ -1,0 +1,46 @@
+[
+    {
+        "model": "students.student",
+        "pk": 1,
+        "fields": {
+            "name": "Alice Johnson",
+            "email": "alice@example.com",
+            "course": "Computer Science",
+            "age": 20,
+            "joined_date": "2026-01-15"
+        }
+    },
+    {
+        "model": "students.student",
+        "pk": 2,
+        "fields": {
+            "name": "Bob Smith",
+            "email": "bob@example.com",
+            "course": "Mathematics",
+            "age": 22,
+            "joined_date": "2026-02-01"
+        }
+    },
+    {
+        "model": "students.student",
+        "pk": 3,
+        "fields": {
+            "name": "Carol Williams",
+            "email": "carol@example.com",
+            "course": "Physics",
+            "age": 21,
+            "joined_date": "2026-02-20"
+        }
+    },
+    {
+        "model": "students.student",
+        "pk": 4,
+        "fields": {
+            "name": "David Brown",
+            "email": "david@example.com",
+            "course": "Engineering",
+            "age": 23,
+            "joined_date": "2026-03-10"
+        }
+    }
+]

@@ -1,10 +1,168 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Students</title>
-</head>
-<body>
-    <h1>Welcome to the Students App</h1>
-    <p>This page is rendered using a Django template.</p>
-</body>
-</html>
+{% extends 'students/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 fw-bold mb-1">
+            <i class="bi bi-mortarboard text-primary me-2"></i>Academy Dashboard
+        </h1>
+        <p class="text-muted mb-0">Manage students, courses, enrollments, and academic records in real-time.</p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'student_create' %}" class="btn btn-primary me-2">
+            <i class="bi bi-person-plus me-1"></i> New Student
+        </a>
+        <a href="{% url 'enrollment_create' %}" class="btn btn-outline-primary">
+            <i class="bi bi-link-45deg me-1"></i> Enroll Student
+        </a>
+    </div>
+</div>
+
+<!-- Stats Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 border-0 bg-primary bg-opacity-10 text-primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-semibold mb-1 small text-primary">Active Students</h6>
+                    <h2 class="fw-bold mb-0">{{ total_students }}</h2>
+                </div>
+                <div class="bg-primary text-white p-3 rounded-3">
+                    <i class="bi bi-people-fill fs-3"></i>
+                </div>
+            </div>
+            <a href="{% url 'student_list' %}" class="stretched-link mt-2 text-primary fw-semibold small text-decoration-none">
+                View all students <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0 bg-success bg-opacity-10 text-success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-semibold mb-1 small text-success">Available Courses</h6>
+                    <h2 class="fw-bold mb-0">{{ total_courses }}</h2>
+                </div>
+                <div class="bg-success text-white p-3 rounded-3">
+                    <i class="bi bi-book-half fs-3"></i>
+                </div>
+            </div>
+            <a href="{% url 'course_list' %}" class="stretched-link mt-2 text-success fw-semibold small text-decoration-none">
+                Browse catalog <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0 bg-warning bg-opacity-10 text-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-semibold mb-1 small text-secondary">Total Enrollments</h6>
+                    <h2 class="fw-bold mb-0">{{ total_enrollments }}</h2>
+                </div>
+                <div class="bg-warning text-dark p-3 rounded-3">
+                    <i class="bi bi-journal-check fs-3"></i>
+                </div>
+            </div>
+            <a href="{% url 'student_list' %}" class="stretched-link mt-2 text-dark fw-semibold small text-decoration-none">
+                View enrollments <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="row g-4">
+    <!-- Recent Students Column -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Recently Joined Students
+                </h5>
+                <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Age</th>
+                            <th>Active Courses</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in recent_students %}
+                        <tr>
+                            <td class="fw-semibold">
+                                <a href="{% url 'student_detail' student.pk %}" class="text-decoration-none text-dark">
+                                    {{ student.name }}
+                                </a>
+                            </td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.age }}</td>
+                            <td>
+                                {% for course in student.active_courses %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ course.code }}</span>
+                                {% empty %}
+                                    <span class="text-muted small">No active courses</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{% url 'student_detail' student.pk %}" class="btn btn-sm btn-outline-secondary" title="View Profile">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No students registered yet. <a href="{% url 'student_create' %}">Add your first student</a>.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Courses Column -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-collection me-2 text-success"></i>Popular Courses
+                </h5>
+                <a href="{% url 'course_list' %}" class="btn btn-sm btn-outline-success">All Courses</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for course in recent_courses %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <span class="badge bg-secondary mb-1">{{ course.code }}</span>
+                        <h6 class="mb-0 fw-semibold">
+                            <a href="{% url 'course_detail' course.pk %}" class="text-decoration-none text-dark">
+                                {{ course.name }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ course.duration }} weeks duration</small>
+                    </div>
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                        {{ course.active_count }} enrolled
+                    </span>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-muted">
+                    No courses available yet. <a href="{% url 'course_create' %}">Create one</a>.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

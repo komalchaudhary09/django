@@ -1,0 +1,13 @@
+<footer class="footer py-3 text-muted">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center">
+        <div class="col-md-6 d-flex align-items-center">
+            <span class="text-secondary small">&copy; 2026 Django Academy &bull; Built with Django &amp; Bootstrap 5</span>
+        </div>
+        <ul class="nav col-md-6 justify-content-end list-unstyled d-flex gap-3 small">
+            <li><a href="{% url 'home' %}" class="text-secondary text-decoration-none">Home</a></li>
+            <li><a href="{% url 'student_list' %}" class="text-secondary text-decoration-none">Students</a></li>
+            <li><a href="{% url 'course_list' %}" class="text-secondary text-decoration-none">Courses</a></li>
+            <li><a href="/admin/" class="text-secondary text-decoration-none">Admin</a></li>
+        </ul>
+    </div>
+</footer>

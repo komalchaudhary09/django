@@ -1,0 +1,60 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Contact &amp; Support{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="card-title fw-bold mb-0">
+                    <i class="bi bi-headset me-2"></i>Contact Academy Support
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">Have questions regarding student admissions, course registrations, or backend API support? Reach out using the details below:</p>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary text-white p-3 rounded-3 me-3">
+                        <i class="bi bi-envelope fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Email Address</h6>
+                        <a href="mailto:{{ email }}" class="text-decoration-none">{{ email }}</a>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-success text-white p-3 rounded-3 me-3">
+                        <i class="bi bi-telephone fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Direct Helpline</h6>
+                        <span>{{ phone }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-warning text-dark p-3 rounded-3 me-3">
+                        <i class="bi bi-geo-alt fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Campus Location</h6>
+                        <span>{{ address }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start">
+                    <div class="bg-secondary text-white p-3 rounded-3 me-3">
+                        <i class="bi bi-clock-history fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Office Hours</h6>
+                        <span>{{ office_hours }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

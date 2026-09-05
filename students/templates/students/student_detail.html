@@ -1,0 +1,173 @@
+{% extends 'students/base.html' %}
+
+{% block title %}{{ student.name }} — Profile &amp; Enrollments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ student.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 fw-bold mb-0">Student Profile &amp; Enrollments</h1>
+    </div>
+    <div class="d-flex gap-2">
+        {% if not student.is_deleted %}
+            <a href="{% url 'student_update' student.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i> Soft Delete
+            </a>
+        {% else %}
+            <form method="POST" action="{% url 'student_restore' student.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restore Student
+                </button>
+            </form>
+            <form method="POST" action="{% url 'student_hard_delete' student.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to PERMANENTLY delete this student? This cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Permanent Delete
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'student_list' %}" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Student Information Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center p-4">
+                <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 72px; height: 72px; font-size: 1.8rem;">
+                    {{ student.name|slice:":1"|upper }}
+                </div>
+                <h4 class="card-title fw-bold mb-1">{{ student.name }}</h4>
+                <p class="text-muted small mb-2">{{ student.email }}</p>
+
+                {% if student.is_deleted %}
+                    <span class="badge bg-danger mb-3 px-3 py-2">
+                        <i class="bi bi-trash3-fill me-1"></i> Soft Deleted (In Trash)
+                    </span>
+                {% else %}
+                    <span class="badge bg-success mb-3 px-3 py-2">
+                        <i class="bi bi-check-circle-fill me-1"></i> Active Student
+                    </span>
+                {% endif %}
+
+                <hr>
+
+                <div class="text-start">
+                    <div class="mb-2">
+                        <span class="text-muted small d-block">Age</span>
+                        <strong class="fs-6">{{ student.age }} years old</strong>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted small d-block">Joined Date</span>
+                        <strong>{{ student.joined_date|date:"F d, Y — H:i" }}</strong>
+                    </div>
+                    {% if student.bio %}
+                    <div class="mb-0">
+                        <span class="text-muted small d-block">Biography</span>
+                        <p class="small text-secondary mb-0 bg-light p-2 rounded border">{{ student.bio }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Course Enrollments (ForeignKey Relationship) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title fw-bold mb-0">
+                        <i class="bi bi-book text-primary me-2"></i>Course Enrollments
+                    </h5>
+                    <small class="text-muted">Displaying related objects via ForeignKey relationship</small>
+                </div>
+                {% if not student.is_deleted %}
+                    <a href="{% url 'enrollment_create' %}?student={{ student.pk }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Enroll in Course
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Grade</th>
+                            <th>Enrolled On</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'course_detail' enrollment.course.pk %}" class="fw-semibold text-decoration-none text-dark">
+                                    <span class="badge bg-secondary me-1">{{ enrollment.course.code }}</span>
+                                    {{ enrollment.course.name }}
+                                </a>
+                            </td>
+                            <td>{{ enrollment.course.duration }} wks</td>
+                            <td>
+                                {% if enrollment.status == 'ACTIVE' %}
+                                    <span class="badge bg-success"><i class="bi bi-play-fill me-1"></i>Active</span>
+                                {% elif enrollment.status == 'COMPLETED' %}
+                                    <span class="badge bg-primary"><i class="bi bi-award-fill me-1"></i>Completed</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Dropped</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if enrollment.grade %}
+                                    <span class="badge bg-light text-dark border fw-bold">{{ enrollment.grade }}</span>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ enrollment.enrolled_at|date:"M d, Y" }}</small></td>
+                            <td class="text-end">
+                                <form method="POST" action="{% url 'enrollment_delete' enrollment.pk %}" class="d-inline" onsubmit="return confirm('Remove this course enrollment?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove Enrollment">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                                This student is not currently enrolled in any courses.
+                                {% if not student.is_deleted %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'enrollment_create' %}?student={{ student.pk }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-plus-circle me-1"></i> Enroll Now
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

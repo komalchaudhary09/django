@@ -1,0 +1,40 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Confirm Soft Delete — {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card shadow border-danger border-opacity-25">
+            <div class="card-header bg-danger text-white py-3">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Soft Delete
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="lead">Are you sure you want to move <strong>{{ student.name }}</strong> (<code>{{ student.email }}</code>) to the trash?</p>
+                
+                <div class="alert alert-warning">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i>Soft Delete Information</h6>
+                    <small class="d-block text-muted">
+                        This action will mark the student record as inactive (<code>is_deleted = True</code>). 
+                        Their enrollment records and history will be preserved and can be restored at any time from the trash filter or Django Admin panel.
+                    </small>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash-fill me-1"></i> Yes, Move to Trash
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
