@@ -40,10 +40,34 @@ class Course(models.Model):
         return self.enrollments.filter(student__is_deleted=False).count()
 
 
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=20, unique=True, help_text="e.g. CS, EE, BBA")
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['code', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+    @property
+    def student_count(self):
+        return self.students.filter(is_deleted=False).count()
+
+
 class Student(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     age = models.PositiveIntegerField()
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students"
+    )
     bio = models.TextField(blank=True)
     joined_date = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(

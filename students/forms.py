@@ -1,11 +1,38 @@
 from django import forms
-from .models import Student, Course, Enrollment
+from .models import Student, Course, Enrollment, Department
+
+
+class DepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        fields = ['code', 'name', 'description']
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. CS, EE, BBA'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Department Name (e.g. Computer Science)'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Department mission and details...'}),
+        }
+        labels = {
+            'code': 'Department Code',
+            'name': 'Department Name',
+            'description': 'Description',
+        }
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code', '').strip().upper()
+        if len(code) < 2:
+            raise forms.ValidationError("Department code must be at least 2 characters.")
+        existing = Department.objects.filter(code__iexact=code)
+        if self.instance and self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise forms.ValidationError(f"Department code '{code}' is already in use.")
+        return code
 
 
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['name', 'email', 'age', 'bio']
+        fields = ['name', 'email', 'age', 'department', 'bio']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -22,6 +49,9 @@ class StudentForm(forms.ModelForm):
                 'min': '16',
                 'max': '100',
             }),
+            'department': forms.Select(attrs={
+                'class': 'form-select',
+            }),
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Brief background or bio (optional)...',
@@ -32,11 +62,13 @@ class StudentForm(forms.ModelForm):
             'name': 'Student Name',
             'email': 'Email Address',
             'age': 'Age (Years)',
+            'department': 'Department',
             'bio': 'Biography',
         }
         help_texts = {
             'email': 'We will never share your email with anyone else.',
             'age': 'Students must be at least 16 years old.',
+            'department': 'Assign student to an academic department.',
         }
 
     def clean_name(self):

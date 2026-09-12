@@ -66,6 +66,16 @@
 
                 <div class="text-start">
                     <div class="mb-2">
+                        <span class="text-muted small d-block">Department</span>
+                        {% if student.department %}
+                            <a href="{% url 'department_detail' student.department.pk %}" class="fw-bold text-decoration-none">
+                                <i class="bi bi-building me-1"></i>{{ student.department.name }} ({{ student.department.code }})
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">Not assigned to a department</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
                         <span class="text-muted small d-block">Age</span>
                         <strong class="fs-6">{{ student.age }} years old</strong>
                     </div>

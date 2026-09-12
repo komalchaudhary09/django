@@ -15,6 +15,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if 'department' in request.resolver_match.url_name %}active fw-semibold{% endif %}" href="{% url 'department_list' %}">
+                        <i class="bi bi-building me-1"></i> Departments
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if 'student' in request.resolver_match.url_name %}active fw-semibold{% endif %}" href="{% url 'student_list' %}">
                         <i class="bi bi-people-fill me-1"></i> Students
                     </a>
@@ -22,6 +27,11 @@
                 <li class="nav-item">
                     <a class="nav-link {% if 'course' in request.resolver_match.url_name %}active fw-semibold{% endif %}" href="{% url 'course_list' %}">
                         <i class="bi bi-book-half me-1"></i> Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'orm_lab' %}active fw-semibold text-warning{% endif %}" href="{% url 'orm_lab' %}">
+                        <i class="bi bi-cpu-fill me-1"></i> ORM Practice Lab
                     </a>
                 </li>
                 <li class="nav-item">

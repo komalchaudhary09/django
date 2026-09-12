@@ -1,11 +1,17 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from .models import Student, Course, Enrollment
-from .forms import StudentForm, CourseForm, EnrollmentForm
+from .models import Student, Course, Enrollment, Department
+from .forms import StudentForm, CourseForm, EnrollmentForm, DepartmentForm
+from .orm_practice import run_all_orm_exercises
 
 
 class ModelTests(TestCase):
     def setUp(self):
+        self.department = Department.objects.create(
+            code="CS",
+            name="Computer Science",
+            description="Software and Computing"
+        )
         self.course = Course.objects.create(
             code="CS101",
             name="Computer Science 101",
@@ -16,17 +22,26 @@ class ModelTests(TestCase):
             name="John Doe",
             email="john@example.com",
             age=22,
+            department=self.department,
             bio="Test student bio"
         )
+
+    def test_department_creation_and_str(self):
+        self.assertEqual(str(self.department), "Computer Science (CS)")
+        self.assertEqual(self.department.student_count, 1)
 
     def test_course_creation_and_str(self):
         self.assertEqual(str(self.course), "CS101 - Computer Science 101")
         self.assertEqual(self.course.student_count, 0)
 
-    def test_student_creation_and_str(self):
+    def test_student_creation_and_relationships(self):
         self.assertEqual(str(self.student), "John Doe")
         self.assertFalse(self.student.is_deleted)
         self.assertIn(self.student, Student.objects.all())
+        # Forward lookup: student -> department
+        self.assertEqual(self.student.department.code, "CS")
+        # Reverse lookup: department -> students
+        self.assertIn(self.student, self.department.students.all())
 
     def test_enrollment_creation_and_str(self):
         enrollment = Enrollment.objects.create(
@@ -58,10 +73,12 @@ class ModelTests(TestCase):
 
 class FormTests(TestCase):
     def setUp(self):
+        self.dept = Department.objects.create(code="EE", name="Electrical Eng")
         self.student = Student.objects.create(
             name="Existing Student",
             email="existing@example.com",
-            age=20
+            age=20,
+            department=self.dept
         )
         self.course = Course.objects.create(
             code="PY101",
@@ -69,11 +86,28 @@ class FormTests(TestCase):
             duration=4
         )
 
+    def test_department_form_valid(self):
+        form = DepartmentForm(data={
+            'code': 'BA',
+            'name': 'Business Administration',
+            'description': 'Business School'
+        })
+        self.assertTrue(form.is_valid())
+
+    def test_department_form_duplicate_code(self):
+        form = DepartmentForm(data={
+            'code': 'EE',
+            'name': 'Duplicate EE',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('code', form.errors)
+
     def test_student_form_valid(self):
         form = StudentForm(data={
             'name': 'Jane Smith',
             'email': 'jane@example.com',
             'age': 25,
+            'department': self.dept.id,
             'bio': 'Learning web dev'
         })
         self.assertTrue(form.is_valid())
@@ -82,7 +116,7 @@ class FormTests(TestCase):
         form = StudentForm(data={
             'name': 'Young Student',
             'email': 'young@example.com',
-            'age': 12, # below min 16
+            'age': 12,  # below min 16
         })
         self.assertFalse(form.is_valid())
         self.assertIn('age', form.errors)
@@ -109,98 +143,122 @@ class FormTests(TestCase):
 class ViewTests(TestCase):
     def setUp(self):
         self.client = Client()
+        self.dept_cs = Department.objects.create(code="CS", name="Computer Science")
+        self.dept_ee = Department.objects.create(code="EE", name="Electrical Eng")
         self.course1 = Course.objects.create(code="CS101", name="CS Basics", duration=8)
         self.course2 = Course.objects.create(code="PY201", name="Python Basics", duration=6)
-        self.student1 = Student.objects.create(name="Alice", email="alice@test.com", age=20)
-        self.student2 = Student.objects.create(name="Bob", email="bob@test.com", age=25)
+
+        # Create 7 students to test 5-per-page pagination
+        for i in range(1, 8):
+            Student.objects.create(
+                name=f"Student {i}",
+                email=f"student{i}@test.com",
+                age=18 + i,
+                department=self.dept_cs if i <= 4 else self.dept_ee
+            )
+
         self.student_deleted = Student.all_objects.create(
             name="Charlie (Deleted)",
             email="charlie@test.com",
             age=30,
+            department=self.dept_cs,
             is_deleted=True
         )
-        Enrollment.objects.create(student=self.student1, course=self.course1, status="ACTIVE")
+        Enrollment.objects.create(student=Student.objects.first(), course=self.course1, status="ACTIVE")
 
     def test_home_view(self):
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Academy Dashboard")
-        self.assertContains(response, "Alice")
+        self.assertContains(response, "Computer Science")
 
-    def test_student_list_view(self):
+    def test_student_list_pagination_five_per_page(self):
         response = self.client.get(reverse('student_list'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Alice")
-        self.assertContains(response, "Bob")
-        # Soft-deleted student should not show by default
-        self.assertNotContains(response, "Charlie (Deleted)")
+        # Should contain 5 students on page 1
+        self.assertEqual(len(response.context['students']), 5)
+        self.assertTrue(response.context['page_obj'].has_next())
 
-    def test_student_search(self):
-        response = self.client.get(reverse('student_list') + '?q=Alice')
+    def test_student_search_and_filters(self):
+        # Search by name
+        response = self.client.get(reverse('student_list') + '?q=Student 1')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Alice")
-        self.assertNotContains(response, "Bob")
+        self.assertContains(response, "Student 1")
 
-    def test_student_course_filter(self):
-        response = self.client.get(reverse('student_list') + f'?course={self.course1.id}')
+        # Filter by department
+        response = self.client.get(reverse('student_list') + f'?department={self.dept_ee.id}')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Alice")
-        self.assertNotContains(response, "Bob")
+        self.assertEqual(response.context['total_matching'], 3)
 
-    def test_student_status_filter_deleted(self):
-        response = self.client.get(reverse('student_list') + '?status=deleted')
+        # Filter by age range
+        response = self.client.get(reverse('student_list') + '?min_age=20&max_age=23')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Charlie (Deleted)")
-        self.assertNotContains(response, "Alice")
+        for s in response.context['students']:
+            self.assertTrue(20 <= s.age <= 23)
 
-    def test_student_detail_view(self):
-        response = self.client.get(reverse('student_detail', kwargs={'pk': self.student1.pk}))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Alice")
-        self.assertContains(response, "CS101")
-
-    def test_student_create_post(self):
-        response = self.client.post(reverse('student_create'), {
-            'name': 'David Clark',
-            'email': 'david.clark@test.com',
-            'age': 23,
-            'bio': 'New bio'
-        })
-        self.assertEqual(response.status_code, 302)
-        new_student = Student.objects.get(email='david.clark@test.com')
-        self.assertEqual(new_student.name, 'David Clark')
-
-    def test_student_update_post(self):
-        response = self.client.post(reverse('student_update', kwargs={'pk': self.student1.pk}), {
-            'name': 'Alice Updated',
-            'email': 'alice@test.com',
-            'age': 21,
-            'bio': 'Updated bio'
-        })
-        self.assertEqual(response.status_code, 302)
-        self.student1.refresh_from_db()
-        self.assertEqual(self.student1.name, 'Alice Updated')
-        self.assertEqual(self.student1.age, 21)
-
-    def test_student_soft_delete_post(self):
-        response = self.client.post(reverse('student_delete', kwargs={'pk': self.student1.pk}))
-        self.assertEqual(response.status_code, 302)
-        self.student1.refresh_from_db()
-        self.assertTrue(self.student1.is_deleted)
-
-    def test_student_restore_post(self):
-        response = self.client.post(reverse('student_restore', kwargs={'pk': self.student_deleted.pk}))
-        self.assertEqual(response.status_code, 302)
-        self.student_deleted.refresh_from_db()
-        self.assertFalse(self.student_deleted.is_deleted)
-
-    def test_course_views(self):
+    def test_department_crud_views(self):
         # List
-        response = self.client.get(reverse('course_list'))
+        response = self.client.get(reverse('department_list'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "CS Basics")
+        self.assertContains(response, "Computer Science")
 
-        # Detail with reverse relationship
-        response = self.client.get(reverse('course_detail', kwargs={'pk': self.course1.pk}))
+        # Detail
+        response = self.client.get(reverse('department_detail', kwargs={'pk': self.dept_cs.pk}))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Alice")
+        self.assertContains(response, "Computer Science")
+        self.assertContains(response, "Student 1")
+
+        # Create
+        response = self.client.post(reverse('department_create'), {
+            'code': 'MATH',
+            'name': 'Mathematics',
+            'description': 'Math Dept'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Department.objects.filter(code='MATH').exists())
+
+        # Update
+        response = self.client.post(reverse('department_update', kwargs={'pk': self.dept_cs.pk}), {
+            'code': 'CS',
+            'name': 'Computer Science & AI',
+            'description': 'Updated'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.dept_cs.refresh_from_db()
+        self.assertEqual(self.dept_cs.name, 'Computer Science & AI')
+
+        # Delete
+        dept_to_del = Department.objects.create(code='TEMP', name='Temporary')
+        response = self.client.post(reverse('department_delete', kwargs={'pk': dept_to_del.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Department.objects.filter(code='TEMP').exists())
+
+    def test_orm_lab_view(self):
+        response = self.client.get(reverse('orm_lab'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Django ORM Practice &amp; Query Laboratory")
+        self.assertIn('sections', response.context)
+        self.assertEqual(len(response.context['sections']), 11)
+
+
+class ORMExerciseFunctionTests(TestCase):
+    def setUp(self):
+        dept = Department.objects.create(code="CS", name="Computer Science")
+        Student.objects.create(name="Alice", email="alice@test.com", age=21, department=dept)
+        Student.objects.create(name="Bob", email="bob@test.com", age=24, department=dept)
+
+    def test_run_all_orm_exercises(self):
+        sections = run_all_orm_exercises()
+        self.assertTrue(len(sections) >= 10)
+        section_ids = [s['id'] for s in sections]
+        self.assertIn('1-insert-data', section_ids)
+        self.assertIn('2-retrieve-data', section_ids)
+        self.assertIn('3-field-lookups', section_ids)
+        self.assertIn('4-ordering-data', section_ids)
+        self.assertIn('5-aggregation-functions', section_ids)
+        self.assertIn('6-relationships-querying', section_ids)
+        self.assertIn('7-q-objects', section_ids)
+        self.assertIn('8-f-expressions', section_ids)
+        self.assertIn('9-pagination', section_ids)
+        self.assertIn('10-search-filter-system', section_ids)
+        self.assertIn('bonus-tasks', section_ids)

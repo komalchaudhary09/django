@@ -1,5 +1,16 @@
 from django.contrib import admin
-from .models import Student, Course, Enrollment
+from .models import Student, Course, Enrollment, Department
+
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ("id", "code", "name", "created_at", "student_count_display")
+    search_fields = ("name", "code")
+    ordering = ("code",)
+
+    @admin.display(description="Students")
+    def student_count_display(self, obj):
+        return obj.students.filter(is_deleted=False).count()
 
 
 class EnrollmentInline(admin.TabularInline):
@@ -45,9 +56,9 @@ class StudentAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return Student.all_objects.all()
 
-    list_display = ("id", "name", "email", "age", "joined_date", "is_deleted", "enrollment_count")
+    list_display = ("id", "name", "email", "age", "department", "joined_date", "is_deleted", "enrollment_count")
     search_fields = ("name", "email")
-    list_filter = ("is_deleted", "joined_date", "age")
+    list_filter = ("department", "is_deleted", "joined_date", "age")
     actions = [soft_delete_selected, restore_selected]
     inlines = [EnrollmentInline]
     ordering = ("-joined_date",)

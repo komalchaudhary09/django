@@ -1,0 +1,90 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Academic Departments{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="h2 fw-bold mb-1">
+            <i class="bi bi-building text-primary me-2"></i>Academic Departments
+        </h1>
+        <p class="text-muted mb-0">Manage academic departments and explore department-student relationships.</p>
+    </div>
+    <div>
+        <a href="{% url 'department_create' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Add Department
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card p-3 mb-4 shadow-sm border-0 bg-white">
+    <form method="GET" action="{% url 'department_list' %}" class="row g-2 align-items-center">
+        <div class="col-md-10">
+            <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search departments by code or name...">
+            </div>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">
+                <i class="bi bi-search me-1"></i> Search
+            </button>
+            {% if search_query %}
+                <a href="{% url 'department_list' %}" class="btn btn-outline-secondary" title="Clear Search">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Departments Grid -->
+<div class="row g-4 mb-4">
+    {% for dept in departments %}
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 shadow-sm border-0 card-hover">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-primary fs-6 px-3 py-2">{{ dept.code }}</span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-people-fill text-primary me-1"></i>{{ dept.active_students }} students
+                    </span>
+                </div>
+                <h5 class="card-title fw-bold mt-2 mb-1">{{ dept.name }}</h5>
+                <p class="card-text text-muted small flex-grow-1">
+                    {{ dept.description|default:"No description provided."|truncatechars:90 }}
+                </p>
+                <hr class="my-3 text-muted">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'department_detail' dept.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i> View Students
+                    </a>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'department_update' dept.pk %}" class="btn btn-outline-secondary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'department_delete' dept.pk %}" class="btn btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card p-5 text-center text-muted border-0 shadow-sm">
+            <i class="bi bi-building-slash fs-1 text-secondary mb-3"></i>
+            <h5>No departments found</h5>
+            <p class="small text-muted mb-3">Create an academic department to start organizing students.</p>
+            <div>
+                <a href="{% url 'department_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Department
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

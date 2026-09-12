@@ -8,7 +8,7 @@
         <h1 class="h2 fw-bold mb-1">
             <i class="bi bi-people text-primary me-2"></i>Students Directory
         </h1>
-        <p class="text-muted mb-0">Browse, search, filter, and manage student enrollments.</p>
+        <p class="text-muted mb-0">Browse, search, filter, and manage students across departments (5 per page).</p>
     </div>
     <div class="d-flex gap-2">
         <a href="{% url 'student_create' %}" class="btn btn-primary shadow-sm">
@@ -20,56 +20,72 @@
     </div>
 </div>
 
-<!-- Search & Filter Card -->
-<div class="card p-3 mb-4 shadow-sm">
+<!-- Search & Filter Card (Requirements: Search by name, filter by department, filter by age) -->
+<div class="card p-3 mb-4 shadow-sm border-0 bg-white">
     <form method="GET" action="{% url 'student_list' %}" class="row g-2 align-items-center">
         <!-- Search Query (?q=) -->
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-semibold text-muted mb-1">Search Name / Bio</label>
             <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by name, email, or bio...">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search name or bio...">
             </div>
         </div>
 
-        <!-- Filter by Course (?course=) -->
-        <div class="col-lg-3 col-md-6">
-            <select name="course" class="form-select">
-                <option value="">-- Filter by Course --</option>
-                {% for course in courses %}
-                    <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"s" %}selected{% endif %}>
-                        {{ course.code }} - {{ course.name }}
+        <!-- Filter by Department (?department=) -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-semibold text-muted mb-1">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.code }} - {{ dept.name }}
                     </option>
                 {% endfor %}
             </select>
         </div>
 
+        <!-- Filter by Min Age (?min_age=) -->
+        <div class="col-lg-1 col-md-3 col-6">
+            <label class="form-label small fw-semibold text-muted mb-1">Min Age</label>
+            <input type="number" name="min_age" value="{{ min_age }}" class="form-control" placeholder="16" min="16" max="100">
+        </div>
+
+        <!-- Filter by Max Age (?max_age=) -->
+        <div class="col-lg-1 col-md-3 col-6">
+            <label class="form-label small fw-semibold text-muted mb-1">Max Age</label>
+            <input type="number" name="max_age" value="{{ max_age }}" class="form-control" placeholder="100" min="16" max="100">
+        </div>
+
         <!-- Filter by Soft-delete Status (?status=) -->
-        <div class="col-lg-2 col-md-6">
+        <div class="col-lg-2 col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Status</label>
             <select name="status" class="form-select">
-                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active Only ({{ total_active }})</option>
-                <option value="deleted" {% if selected_status == 'deleted' %}selected{% endif %}>Trash (Soft Deleted: {{ total_deleted }})</option>
+                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active ({{ total_active }})</option>
+                <option value="deleted" {% if selected_status == 'deleted' %}selected{% endif %}>Trash ({{ total_deleted }})</option>
                 <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Records</option>
             </select>
         </div>
 
         <!-- Sort By (?sort=) -->
-        <div class="col-lg-2 col-md-6">
+        <div class="col-lg-2 col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">Sort Order</label>
             <select name="sort" class="form-select">
                 <option value="-joined_date" {% if selected_sort == '-joined_date' %}selected{% endif %}>Newest First</option>
                 <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
                 <option value="-name" {% if selected_sort == '-name' %}selected{% endif %}>Name (Z-A)</option>
-                <option value="age" {% if selected_sort == 'age' %}selected{% endif %}>Age (Youngest)</option>
-                <option value="-age" {% if selected_sort == '-age' %}selected{% endif %}>Age (Oldest)</option>
+                <option value="age" {% if selected_sort == 'age' %}selected{% endif %}>Age (Ascending)</option>
+                <option value="-age" {% if selected_sort == '-age' %}selected{% endif %}>Age (Descending)</option>
             </select>
         </div>
 
-        <!-- Filter / Reset Buttons -->
-        <div class="col-lg-1 col-md-12 d-flex gap-2">
-            <button type="submit" class="btn btn-primary w-100" title="Apply Filters">
+        <!-- Action Buttons -->
+        <div class="col-lg-1 col-md-4 d-flex gap-1 align-self-end">
+            <button type="submit" class="btn btn-primary flex-fill" title="Filter Records">
                 <i class="bi bi-funnel-fill"></i>
             </button>
-            {% if search_query or selected_course or selected_status != 'active' or selected_sort != '-joined_date' %}
-                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary" title="Reset All Filters">
+            {% if search_query or selected_department or min_age or max_age or selected_course or selected_status != 'active' or selected_sort != '-joined_date' %}
+                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary" title="Reset Filters">
                     <i class="bi bi-x-circle"></i>
                 </a>
             {% endif %}
@@ -77,30 +93,39 @@
     </form>
 </div>
 
-<!-- Active Filter Badges Info -->
+<!-- Results Summary and Filter Badges -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="small text-muted">
         Showing <strong>{{ page_obj.start_index|default:0 }}–{{ page_obj.end_index|default:0 }}</strong> of <strong>{{ total_matching }}</strong> students
         {% if search_query %}
             matching <span class="badge bg-light text-dark border">"{{ search_query }}"</span>
         {% endif %}
-        {% if selected_status == 'deleted' %}
-            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1"><i class="bi bi-trash me-1"></i>In Trash</span>
+        {% if selected_department %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">Dept Filter</span>
         {% endif %}
+        {% if min_age or max_age %}
+            <span class="badge bg-secondary-subtle text-secondary border ms-1">Age: {{ min_age|default:"16" }}–{{ max_age|default:"100" }}</span>
+        {% endif %}
+        {% if selected_status == 'deleted' %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1"><i class="bi bi-trash me-1"></i>Trash</span>
+        {% endif %}
+    </div>
+    <div class="small text-muted fst-italic">
+        Pagination: 5 items/page
     </div>
 </div>
 
 <!-- Students Table -->
-<div class="card shadow-sm overflow-hidden mb-4">
+<div class="card shadow-sm border-0 overflow-hidden mb-4">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th scope="col" style="width: 25%;">Student Name</th>
+                    <th scope="col">Department</th>
                     <th scope="col">Email</th>
                     <th scope="col">Age</th>
-                    <th scope="col">Enrolled Courses (FK)</th>
-                    <th scope="col">Joined Date</th>
+                    <th scope="col">Courses</th>
                     <th scope="col">Status</th>
                     <th scope="col" class="text-end">Actions</th>
                 </tr>
@@ -110,7 +135,7 @@
                 <tr class="{% if student.is_deleted %}table-secondary bg-opacity-25 text-muted{% endif %}">
                     <td>
                         <div class="d-flex align-items-center">
-                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">
                                 {{ student.name|slice:":1"|upper }}
                             </div>
                             <div>
@@ -118,26 +143,34 @@
                                     {{ student.name }}
                                 </a>
                                 {% if student.bio %}
-                                    <div class="small text-muted text-truncate" style="max-width: 220px;">{{ student.bio }}</div>
+                                    <div class="small text-muted text-truncate" style="max-width: 200px;">{{ student.bio }}</div>
                                 {% endif %}
                             </div>
                         </div>
                     </td>
-                    <td>{{ student.email }}</td>
-                    <td>{{ student.age }}</td>
+                    <td>
+                        {% if student.department %}
+                            <a href="{% url 'department_detail' student.department.pk %}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none">
+                                <i class="bi bi-building me-1"></i>{{ student.department.code }}
+                            </a>
+                        {% else %}
+                            <span class="badge bg-light text-muted border">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-secondary">{{ student.email }}</small></td>
+                    <td><span class="badge bg-light text-dark border">{{ student.age }} yrs</span></td>
                     <td>
                         {% for enrollment in student.enrollments.all %}
                             <a href="{% url 'course_detail' enrollment.course.pk %}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none mb-1 d-inline-block">
-                                {{ enrollment.course.code }}: {{ enrollment.course.name|truncatechars:18 }}
+                                {{ enrollment.course.code }}
                             </a>
                         {% empty %}
-                            <span class="badge bg-light text-muted border">No courses</span>
+                            <span class="text-muted small">None</span>
                         {% endfor %}
                     </td>
-                    <td>{{ student.joined_date|date:"M d, Y" }}</td>
                     <td>
                         {% if student.is_deleted %}
-                            <span class="badge bg-danger"><i class="bi bi-trash3-fill me-1"></i>Soft Deleted</span>
+                            <span class="badge bg-danger"><i class="bi bi-trash3-fill me-1"></i>Deleted</span>
                         {% else %}
                             <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
                         {% endif %}
@@ -148,17 +181,17 @@
                                 <i class="bi bi-eye"></i>
                             </a>
                             {% if not student.is_deleted %}
-                                <a href="{% url 'student_update' student.pk %}" class="btn btn-outline-secondary" title="Edit Student">
+                                <a href="{% url 'student_update' student.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger" title="Soft Delete">
+                                <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger" title="Trash">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             {% else %}
                                 <form method="POST" action="{% url 'student_restore' student.pk %}" class="d-inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-success" title="Restore Student">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    <button type="submit" class="btn btn-outline-success" title="Restore">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
                                     </button>
                                 </form>
                             {% endif %}
@@ -169,8 +202,8 @@
                 <tr>
                     <td colspan="7" class="text-center py-5 text-muted">
                         <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
-                        <h5>No students found</h5>
-                        <p class="small text-muted mb-3">Try adjusting your search criteria or create a new student record.</p>
+                        <h5>No students match the criteria</h5>
+                        <p class="small text-muted mb-3">Try adjusting your search terms or age/department filters.</p>
                         <a href="{% url 'student_create' %}" class="btn btn-primary btn-sm">
                             <i class="bi bi-person-plus me-1"></i> Add Student
                         </a>
@@ -182,18 +215,18 @@
     </div>
 </div>
 
-<!-- Pagination Controls -->
+<!-- Pagination Controls (Preserving all filter params) -->
 {% if page_obj.has_other_pages %}
 <nav aria-label="Student pagination" class="d-flex justify-content-center my-4">
     <ul class="pagination shadow-sm">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="First">
+                <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if min_age %}&min_age={{ min_age }}{% endif %}{% if max_age %}&max_age={{ max_age }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="First">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if min_age %}&min_age={{ min_age }}{% endif %}{% if max_age %}&max_age={{ max_age }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">
                     <span aria-hidden="true">&laquo;</span> Prev
                 </a>
             </li>
@@ -207,19 +240,19 @@
                 <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if min_age %}&min_age={{ min_age }}{% endif %}{% if max_age %}&max_age={{ max_age }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">{{ num }}</a>
                 </li>
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if min_age %}&min_age={{ min_age }}{% endif %}{% if max_age %}&max_age={{ max_age }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">
                     Next <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="Last">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if min_age %}&min_age={{ min_age }}{% endif %}{% if max_age %}&max_age={{ max_age }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="Last">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>

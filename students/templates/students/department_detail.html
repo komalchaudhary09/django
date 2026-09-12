@@ -1,0 +1,124 @@
+{% extends 'students/base.html' %}
+
+{% block title %}{{ department.name }} ({{ department.code }}) — Department{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'department_list' %}">Departments</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ department.code }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 fw-bold mb-0">{{ department.name }}</h1>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'department_update' department.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <a href="{% url 'department_delete' department.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i> Delete
+        </a>
+        <a href="{% url 'department_list' %}" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1"></i> Back to Departments
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Department Overview -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge bg-primary fs-5 px-3 py-2 me-2">{{ department.code }}</span>
+                    <h5 class="fw-bold mb-0">{{ department.name }}</h5>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Department Description</span>
+                    <p class="mb-0 text-secondary">{{ department.description|default:"No description provided." }}</p>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Established Date</span>
+                    <strong>{{ department.created_at|date:"F d, Y" }}</strong>
+                </div>
+                <div class="mb-0">
+                    <span class="text-muted small d-block">Enrolled Students (Reverse Lookup)</span>
+                    <span class="badge bg-success fs-6">{{ students.count }} active students</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 bg-primary-subtle border-primary-subtle">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-code-slash me-2"></i>Django ORM Reverse Lookup</h6>
+                <p class="small text-secondary mb-2">
+                    Accessing all students belonging to this department using reverse relationship manager:
+                </p>
+                <code class="small d-block bg-white p-2 rounded border text-dark">
+                    department.students.filter(is_deleted=False)
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students in Department (Reverse Lookup Table) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-people-fill text-primary me-2"></i>Students in {{ department.name }}
+                </h5>
+                <a href="{% url 'student_create' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-person-plus-fill me-1"></i> Add New Student
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Age</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ student.name|slice:":1"|upper }}
+                                    </div>
+                                    <a href="{% url 'student_detail' student.pk %}" class="fw-semibold text-decoration-none text-dark">
+                                        {{ student.name }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td><small class="text-secondary">{{ student.email }}</small></td>
+                            <td><span class="badge bg-light text-dark border">{{ student.age }} yrs</span></td>
+                            <td class="text-end">
+                                <a href="{% url 'student_detail' student.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> View Profile
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
+                                <h6>No students currently enrolled in this department</h6>
+                                <p class="small text-muted mb-0">Assign students to this department via Student Edit form.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Django ORM Practice &amp; Query Laboratory{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="h2 fw-bold mb-1">
+            <i class="bi bi-cpu-fill text-warning me-2"></i>Django ORM Practice &amp; Query Laboratory
+        </h1>
+        <p class="text-muted mb-0">Interactive showcase and live test results for all 10 core ORM modules + Bonus optimization tasks.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'student_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-people me-1"></i> Students Directory
+        </a>
+        <a href="{% url 'department_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-building me-1"></i> Departments
+        </a>
+    </div>
+</div>
+
+<!-- Quick Navigation Bar -->
+<div class="card p-3 mb-4 shadow-sm border-0 bg-white">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="fw-bold small text-muted me-2"><i class="bi bi-bookmark-check-fill me-1"></i>Jump to Topic:</span>
+        <a href="#1-insert-data" class="btn btn-sm btn-outline-primary">1. Insert Data</a>
+        <a href="#2-retrieve-data" class="btn btn-sm btn-outline-primary">2. Retrieve Data</a>
+        <a href="#3-field-lookups" class="btn btn-sm btn-outline-primary">3. Field Lookups</a>
+        <a href="#4-ordering-data" class="btn btn-sm btn-outline-primary">4. Ordering Data</a>
+        <a href="#5-aggregation-functions" class="btn btn-sm btn-outline-primary">5. Aggregations</a>
+        <a href="#6-relationships-querying" class="btn btn-sm btn-outline-primary">6. Relationships</a>
+        <a href="#7-q-objects" class="btn btn-sm btn-outline-primary">7. Q Objects</a>
+        <a href="#8-f-expressions" class="btn btn-sm btn-outline-primary">8. F Expressions</a>
+        <a href="#9-pagination" class="btn btn-sm btn-outline-primary">9. Pagination</a>
+        <a href="#10-search-filter-system" class="btn btn-sm btn-outline-primary">10. Search + Filters</a>
+        <a href="#bonus-tasks" class="btn btn-sm btn-warning">Bonus Optimization</a>
+    </div>
+</div>
+
+<!-- Sections Loop -->
+{% for section in sections %}
+<div id="{{ section.id }}" class="card shadow-sm border-0 mb-5">
+    <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold mb-0 text-white">
+                <i class="bi bi-terminal text-warning me-2"></i>{{ section.title }}
+            </h4>
+            <small class="text-light opacity-75">{{ section.description }}</small>
+        </div>
+        <span class="badge bg-primary fs-6">{{ section.examples|length }} Exercises</span>
+    </div>
+
+    <div class="card-body p-4">
+        <div class="row g-4">
+            {% for ex in section.examples %}
+            <div class="col-12">
+                <div class="card border border-light-subtle shadow-none bg-light p-3">
+                    <h5 class="fw-bold text-primary mb-2">
+                        <i class="bi bi-check2-circle me-1"></i>{{ ex.subtitle }}
+                    </h5>
+
+                    {% if ex.explanation %}
+                        <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>{{ ex.explanation }}</p>
+                    {% endif %}
+
+                    <!-- Query Code Box -->
+                    <div class="mb-2">
+                        <span class="badge bg-secondary mb-1">Django ORM Code</span>
+                        <pre class="bg-dark text-light p-3 rounded mb-0" style="font-family: Consolas, monospace; font-size: 0.9rem;"><code>{{ ex.code }}</code></pre>
+                    </div>
+
+                    <!-- Generated SQL (if available) -->
+                    {% if ex.sql %}
+                    <div class="mb-2">
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle mb-1">Underlying SQL Query</span>
+                        <pre class="bg-white text-secondary p-2 rounded border mb-0 small" style="font-family: Consolas, monospace;"><code>{{ ex.sql }}</code></pre>
+                    </div>
+                    {% endif %}
+
+                    <!-- Live Output Result -->
+                    <div class="mt-2">
+                        <span class="badge bg-success mb-1">Live Database Output</span>
+                        <div class="bg-white p-3 rounded border">
+                            <pre class="mb-0 text-dark" style="font-family: Consolas, monospace; font-size: 0.85rem; white-space: pre-wrap;">{{ ex.result }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="text-center my-5">
+    <a href="#" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-up-circle me-1"></i> Back to Top
+    </a>
+</div>
+{% endblock %}
